@@ -1,0 +1,54 @@
+{
+    "project": {
+        "name": "project name",
+        "model": "model name",
+        "repo": {
+            "type": "git",
+            "url": "http://172.19.176.125:1234/",
+            "queries": {
+                "p": "vatics.git",
+                "a": "commit",
+                "h": ""
+            }
+        },
+        "path": {
+            "webfs": "mkimages/webfs/",
+            "cgi": "mkimages/webfs/cgi/",
+            "sbin": "mkimages/rootfs/sbin/",
+            "lib": "mkimages/rootfs/lib/",
+            "prefix": "/home/yourname/path_to_project/",
+            "root": "/home/yourname/path_to_project/"
+        },
+        "sbin": [
+            {
+                "name": "app 1",
+                "description": "aplpication 1",
+                "comment": ""
+            },
+            {
+                "name": "app 2",
+                "description": "aplpication 2",
+                "comment": ""
+            },
+            {
+                "name": "app 3",
+                "description": "aplpication 3",
+                "comment": ""
+            },
+            {
+                "name": "app n",
+                "description": "aplpication n",
+                "comment": ""
+            }
+        ],
+        "cgi": [
+            {
+                "name": "cgibox",
+                "description": "cgi applets",
+                "comment": ""
+            }
+        ],
+        "comment": ""
+    },
+    "comment": ""
+}

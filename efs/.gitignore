@@ -1,0 +1,11 @@
+# pycharm files
+.idea
+
+# compiled bytecode files
+__pycache__
+*.pyc
+
+
+# test files
+test
+report
