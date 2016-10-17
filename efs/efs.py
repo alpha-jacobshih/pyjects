@@ -3,6 +3,7 @@
 """
 efs.py: elf file summary
 """
+import json
 import os
 import sys
 
@@ -19,6 +20,7 @@ from tools.log import Log
 from pyelftools.elftools.elf.elffile import ELFFile
 from pyelftools.elftools.elf.dynamic import DynamicSection
 from tools.gitlog import git_logs
+from tools.svninfo import svn_info
 
 ################################################################################
 
@@ -81,7 +83,8 @@ class Project:
 
         @staticmethod
         def svn_latest_revision(project_path):
-            latest_revision = "fixme: to be done. get svn revision from " + project_path
+            info = svn_info(project_path)
+            latest_revision = info["last-changed-revision"] if "last-changed-revision" in info else ""
             return latest_revision
 
         def git_browse_path(self):
@@ -95,9 +98,16 @@ class Project:
             browse_path = browse_path[:-1]  # remove the last character, a semi-colon.
             return browse_path
 
-        @staticmethod
-        def svn_browse_path():
-            return ""
+        def svn_browse_path(self):
+            repo = self.repo
+            if "queries" in self.repo:
+                self.repo["queries"]["rev"] = self.latest_revision
+            browse_path = repo.get("url", "") + "?"
+            for key in repo["queries"]:
+                value = repo["queries"][key]
+                browse_path += key + "=" + value + "&"
+            browse_path = browse_path[:-1]  # remove the last character, an ampersand.
+            return browse_path
 
     def __init__(self, dict_project):
         self.dict_project = dict_project
@@ -109,31 +119,25 @@ class Project:
 
     def readelf(self, path, name, elf):
         filename = path + name
-        with open(filename, 'rb') as file:
-            elffile = ELFFile(file)
-            if "name" not in elf:
-                elf["name"] = name
-            if "description" not in elf:
-                elf["description"] = re.split('\.', name)[0]
-            elf["libs"] = self.get_libraries_used_by_elf(elffile)
-            summary = elf.get("summary", {})
-            summary["code_size"] = self.caculate_code_size(elffile)
-            summary["sections"] = {
-                    "bss": self.get_section_size(elffile, ".bss"),
-                    "data": self.get_section_size(elffile, ".data"),
-                    "rodata": self.get_section_size(elffile, ".rodata"),
-                    "text": self.get_section_size(elffile, ".text"),
-                }
-            elf["summary"] = summary
-            # elf["summary"] = {
-            #     "code_size": self.caculate_code_size(elffile),
-            #     "sections": {
-            #         "bss": self.get_section_size(elffile, ".bss"),
-            #         "data": self.get_section_size(elffile, ".data"),
-            #         "rodata": self.get_section_size(elffile, ".rodata"),
-            #         "text": self.get_section_size(elffile, ".text"),
-            #     }
-            # }
+        try:
+            with open(filename, 'rb') as file:
+                elffile = ELFFile(file)
+                if "name" not in elf:
+                    elf["name"] = name
+                if "description" not in elf:
+                    elf["description"] = re.split('\.', name)[0]
+                elf["libs"] = self.get_libraries_used_by_elf(elffile)
+                summary = elf.get("summary", {})
+                summary["code_size"] = self.caculate_code_size(elffile)
+                summary["sections"] = {
+                        "bss": self.get_section_size(elffile, ".bss"),
+                        "data": self.get_section_size(elffile, ".data"),
+                        "rodata": self.get_section_size(elffile, ".rodata"),
+                        "text": self.get_section_size(elffile, ".text"),
+                    }
+                elf["summary"] = summary
+        except FileNotFoundError as e:
+            print(e)
         return elf
 
     def read_apps(self):
@@ -152,8 +156,9 @@ class Project:
         libset = self.libraries.copy()
         for libname in libset:
             lib = dict()
-            self.readelf(self.path.lib, libname, lib)
-            libs.append(lib)
+            elf = self.readelf(self.path.lib, libname, lib)
+            if elf:
+                libs.append(lib)
         self.dict_project["libs"] = sorted(libs, key=lambda x: x["name"])
 
     def get_libraries_used_by_elf(self, elffile):
@@ -311,7 +316,7 @@ class ElfFileSummary:
 
 def init_args_parser():
     # create the parser
-    parser = AnotherArgumentParser(description="======  ELF code size chequer  ======")
+    parser = AnotherArgumentParser(description="======  ELF file summary  ======")
     parser.add_argument("-p", "--project", metavar="filename", required=True,
                         help="a json file describes the project configuration.")
     parser.add_argument("-t", "--output-trac", action="store_true", default=False,

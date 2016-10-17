@@ -364,7 +364,6 @@ function displayResultFull(report) {
         if("apps" in project) {
             var divResult = new DIV("divResult");
             var apps = report.project.apps;
-            var libs = report.project.libs;
             divResult.writeHtml("<table>");
 
             var nav_items = [];
@@ -377,7 +376,11 @@ function displayResultFull(report) {
             divResult.writeHtml(nav_items.join(" | "));
             divResult.writeHtml("<hr class='navbar1'>");
 
-            var elffiles = [].concat(apps).concat(libs);
+            var alllibs = [];
+            report.project.libs.forEach(function(lib) {
+                alllibs.push(lib["name"]);
+            });
+            var elffiles = [].concat(apps).concat(report.project.libs);
             for(i in elffiles) {
                 var elf = new SOURCE(elffiles[i]);
                 divResult.writeHtml("<th colspan='2' align='left' valign='top'>");
@@ -420,7 +423,11 @@ function displayResultFull(report) {
                 var libs = elf.libs;
                 for(i in libs) {
                     var lib = libs[i];
-                    divResult.writeHtml("<a href='#" + lib + "'>" + lib + "</a>");
+                    if(-1 != alllibs.indexOf(lib)) {
+                        divResult.writeHtml("<a href='#" + lib + "'>" + lib + "</a>");
+                    } else {
+                        divResult.writeHtml(lib);
+                    }
                     divResult.writeHtml("<br>");
                 }
                 divResult.writeHtml("</td></tr>");
