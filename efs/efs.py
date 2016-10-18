@@ -3,12 +3,10 @@
 """
 efs.py: elf file summary
 """
-import json
 import os
-import sys
-
 import re
 import shutil
+import sys
 
 if __name__ == '__main__':
     # prevent python from generating compiled byte code (.pyc).
@@ -130,11 +128,11 @@ class Project:
                 summary = elf.get("summary", {})
                 summary["code_size"] = self.caculate_code_size(elffile)
                 summary["sections"] = {
-                        "bss": self.get_section_size(elffile, ".bss"),
-                        "data": self.get_section_size(elffile, ".data"),
-                        "rodata": self.get_section_size(elffile, ".rodata"),
-                        "text": self.get_section_size(elffile, ".text"),
-                    }
+                    "bss": self.get_section_size(elffile, ".bss"),
+                    "data": self.get_section_size(elffile, ".data"),
+                    "rodata": self.get_section_size(elffile, ".rodata"),
+                    "text": self.get_section_size(elffile, ".text"),
+                }
                 elf["summary"] = summary
         except FileNotFoundError as e:
             print(e)
@@ -236,9 +234,10 @@ class ElfFileSummary:
                         dst.write(line)
         pass
 
-    def trac_table_item(self, *args, **kwargs):
+    @staticmethod
+    def trac_table_item(*args, **kwargs):
         bold = kwargs["bold"] if "bold" in kwargs else False
-        line = "||".join(map(lambda x: " **"+x+"** " if bold else x, args))
+        line = "||".join(map(lambda x: " **" + x + "** " if bold else x, args))
         line = "||%s||" % line
         return line
 
@@ -251,7 +250,14 @@ class ElfFileSummary:
                 "== Resource Allocation: Code Size / Image Size / Memory Usage ==", "\n",
                 ""
             ])
-            line = self.trac_table_item("Module / Features", "Code Size", "Image Size", "Memory Usage", "Feature Spec Flexibility", "Note", bold=True)
+            line = self.trac_table_item(
+                "Module / Features",
+                "Code Size",
+                "Image Size",
+                "Memory Usage",
+                "Feature Spec Flexibility",
+                "Note",
+                bold=True)
             f.writelines([line, "\n"])
             for app in self.dict_all["project"]["apps"]:
                 summary = app["summary"] if "summary" in app else {}
@@ -261,7 +267,7 @@ class ElfFileSummary:
                 note = summary["note"] if "note" in summary else ""
                 code_size = " %s" % "{:,}".format(summary["code_size"]) if "code_size" in summary else "-"
                 image_size = " %s" % "{:,}".format(summary["image_size"]) if "image_size" in summary else "-"
-                if all (k in sections for k in ("bss", "data", "rodata", "text")):
+                if all(k in sections for k in ("bss", "data", "rodata", "text")):
                     memory_usage = sections["bss"] + sections["data"] + sections["rodata"] + sections["text"]
                     memory_usage = " %s" % "{:,}".format(memory_usage)
                 else:
