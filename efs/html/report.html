@@ -43,7 +43,7 @@ body {
   font-size: 12px;
 }
 
-#divResult table, #divResultDetail table {
+#divResult table, #divMore table {
   background: #ffffff;
   text-align: left;
   width: 100%;
@@ -51,24 +51,18 @@ body {
   border-collapse: collapse;
 }
 
-#divResult th, #divResult td, #divResultDetail th, #divResultDetail td {
+#divResult th, #divResult td, #divMore th, #divMore td {
   padding: 5px 10px 5px 10px;
   white-space: nowrap;
   border: 1px solid lightblue;
 }
 
-#divResult th {
-  xbackground: #ffc;
+#divResult th, #divMore th {
   background: #003366;
   color: #fcfccc;
 }
 
-#divResult th table {
-  padding: 0;
-  border: none;
-}
-
-#divResult th table th {
+#divResult th table, #divResult th table th, #divMore th table, #divMore th table th {
   padding: 0;
   border: none;
 }
@@ -107,7 +101,84 @@ body {
   border-color: transparent transparent limegreen transparent;
 }
 
-.clsHeader table, #divResult table, #divResult pre, #divResultDetail table, #divResultDetail pre {
+/*
+ * the close icon is powered by https://codepen.io/brissmyr/pen/egidw
+ */
+ 
+.clsClose {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  opacity: 0.5;  
+}
+
+.clsClose:hover {
+  opacity: 1;
+}
+
+.clsClose:before, .clsClose:after {
+  position: absolute;
+  left: 0px;
+  content: '';
+  height: 22px;
+  width: 2px;
+  background-color: white;
+}
+
+.clsClose:before {
+  transform: rotate(45deg);
+}
+
+.clsClose:after {
+  transform: rotate(-45deg);
+}
+
+#divResult td.clsMemUsage, #divMore td.clsMemUsage {
+  padding: 0px;
+  padding: 0px 0px 0px 0px;
+}
+
+#divResult table.clsMemUsageDetail, #divMore table.clsMemUsageDetail {
+  background: #ffffff;
+  text-align: left;
+  width: 0%;
+  border: none;
+}
+
+#divResult table.clsMemUsageDetail td, #divMore table.clsMemUsageDetail td {
+  vertical-align: text-top;
+  border: none;
+}
+
+#divResult table.clsMemUsageDetail td.clsMemUsageTotal, #divMore table.clsMemUsageDetail td.clsMemUsageTotal {
+  padding-right: 100px;
+}
+
+#divResult table.clsMemUsageDetail td.clsMemUsageSections, #divMore table.clsMemUsageDetail td.clsMemUsageSections {
+  border-left: 1px dashed limegreen;
+}
+
+#divResult table.clsSections, #divMore table.clsSections {
+  border: none;
+}
+
+#divResult table.clsSections td, #divMore table.clsSections td {
+  border-bottom: 1px dashed limegreen;
+}
+
+#divResult table.clsSections td.clsSectionName, #divMore table.clsSections td.clsSectionName {
+  text-align: left;
+  padding: 0px 20px 0px 10px;
+}
+
+#divResult table.clsSections td.clsSectionSize, #divMore table.clsSections td.clsSectionSize {
+  text-align: right;
+  padding: 0px 10px 0px 20px;
+}
+
+.clsHeader table, #divResult table, #divResult pre, #divMore table, #divMore pre {
   font-family: verdana;
   font-size: 14px;
 }
@@ -139,25 +210,6 @@ body {
   z-index: 9002;
 }
 
-#divPopup a:link, #divPopup a:visited {
-  color:#fff;
-  text-decoration:none;
-  font-size:12px;
-  background:#000;
-  padding:3px 3px 3px 3px;
-  -webkit-border-radius:10px;
-  -moz-border-radius:10px;
-}
-
-#divPopup a:hover, #divPopup a:active {
-  color:#cfc;
-  text-decoration:none;
-  font-size:12px;
-  background:#777;
-  padding:5px 5px 5px 3px;
-  -webkit-border-radius:10px;
-  -moz-border-radius:10px;
-}
 </style>
 </head>
 <body>
@@ -413,8 +465,27 @@ function displayResultFull(report) {
 
                 divResult.writeHtml("<tr><td width='1%' valign='top'>");
                 divResult.writeHtml("memory usage");
-                divResult.writeHtml("</td><td>");
-                divResult.writeSize(elf.summary.memory_usage);
+                divResult.writeHtml("</td><td class='clsMemUsage'>");
+                    divResult.writeHtml("<table class='clsMemUsageDetail'>");
+                    divResult.writeHtml("<tr><td class='clsMemUsageTotal'>");
+                    divResult.writeSize(elf.summary.memory_usage);
+                    divResult.writeHtml("</td><td class='clsMemUsageSections'>");
+                        divResult.writeHtml("<table class='clsSections'>");
+                        divResult.writeHtml("<tr><td class='clsSectionName'>"+".text"+"</td><td class='clsSectionSize'>");
+                        divResult.writeSize(elf.summary.sections.text);
+                        divResult.writeHtml("</td></tr>");
+                        divResult.writeHtml("<tr><td class='clsSectionName'>"+".rodata"+"</td><td class='clsSectionSize'>");
+                        divResult.writeSize(elf.summary.sections.rodata);
+                        divResult.writeHtml("</td></tr>");
+                        divResult.writeHtml("<tr><td class='clsSectionName'>"+".data"+"</td><td class='clsSectionSize'>");
+                        divResult.writeSize(elf.summary.sections.data);
+                        divResult.writeHtml("</td></tr>");
+                        divResult.writeHtml("<tr><td class='clsSectionName'>"+".bss"+"</td><td class='clsSectionSize'>");
+                        divResult.writeSize(elf.summary.sections.bss);
+                        divResult.writeHtml("</td></tr>");
+                        divResult.writeHtml("</table>");
+                    divResult.writeHtml("</td></tr>");
+                    divResult.writeHtml("</table>");
                 divResult.writeHtml("</td></tr>");
 
                 divResult.writeHtml("<tr><td width='1%' valign='top'>");
@@ -508,12 +579,15 @@ function clickResultItem(i) {
             var apps = report.project.apps;
             var app = new SOURCE(apps[i]);
             popupDiv.div = new DIV(popupDiv.id);
-            popupDiv.div.writeHtml("<a onclick='popupDiv.popup()' href='#'>close</a>");
-            popupDiv.div.writeHtml("<br><div id='divResultDetail'>");
+            popupDiv.div.writeHtml("<div id='divMore'>");
             popupDiv.div.writeHtml("<table>");
 
-            popupDiv.div.writeHtml("<th colspan='2' align='left' height='40'>");
+            popupDiv.div.writeHtml("<th colspan='2' align='left' valign='top'>");
+            popupDiv.div.writeHtml("<table><tr><th>");
             popupDiv.div.writeHtml(app.name);
+            popupDiv.div.writeHtml("</th><th>");
+            popupDiv.div.writeHtml("<a onclick='popupDiv.popup()' href='#' class='clsClose'></a>");
+            popupDiv.div.writeHtml("</th></table>");
             popupDiv.div.writeHtml("</th>");
 
             popupDiv.div.writeHtml("<tr><td width='1%'>");
@@ -538,8 +612,27 @@ function clickResultItem(i) {
 
             popupDiv.div.writeHtml("<tr><td>");
             popupDiv.div.writeHtml("memory usage");
-            popupDiv.div.writeHtml("</td><td>");
-            popupDiv.div.writeSize(app.summary.memory_usage);
+            popupDiv.div.writeHtml("</td><td class='clsMemUsage'>");
+                popupDiv.div.writeHtml("<table class='clsMemUsageDetail'>");
+                popupDiv.div.writeHtml("<tr><td class='clsMemUsageTotal'>");
+                popupDiv.div.writeSize(app.summary.memory_usage);
+                popupDiv.div.writeHtml("</td><td class='clsMemUsageSections'>");
+                    popupDiv.div.writeHtml("<table class='clsSections'>");
+                    popupDiv.div.writeHtml("<tr><td class='clsSectionName'>"+".text"+"</td><td class='clsSectionSize'>");
+                    popupDiv.div.writeSize(app.summary.sections.text);
+                    popupDiv.div.writeHtml("</td></tr>");
+                    popupDiv.div.writeHtml("<tr><td class='clsSectionName'>"+".rodata"+"</td><td class='clsSectionSize'>");
+                    popupDiv.div.writeSize(app.summary.sections.rodata);
+                    popupDiv.div.writeHtml("</td></tr>");
+                    popupDiv.div.writeHtml("<tr><td class='clsSectionName'>"+".data"+"</td><td class='clsSectionSize'>");
+                    popupDiv.div.writeSize(app.summary.sections.data);
+                    popupDiv.div.writeHtml("</td></tr>");
+                    popupDiv.div.writeHtml("<tr><td class='clsSectionName'>"+".bss"+"</td><td class='clsSectionSize'>");
+                    popupDiv.div.writeSize(app.summary.sections.bss);
+                    popupDiv.div.writeHtml("</td></tr>");
+                    popupDiv.div.writeHtml("</table>");
+                popupDiv.div.writeHtml("</td></tr>");
+                popupDiv.div.writeHtml("</table>");
             popupDiv.div.writeHtml("</td></tr>");
 
             popupDiv.div.writeHtml("<tr><td valign='top'>");
@@ -567,5 +660,6 @@ function clickResultItem(i) {
 initialize();
 displayInfo(report);
 displayResult(report);
+clickResultItem(0);
 </script>
 </html>
