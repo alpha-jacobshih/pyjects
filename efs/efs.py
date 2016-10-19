@@ -1,7 +1,9 @@
 #! /usr/bin/env python3.5
 ################################################################################
 """
-efs.py: elf file summary
+efs.py: elf file stats
+    analyzes the specified elf files to generate the report including the code
+    size, memory usage and linking libraries.
 """
 import os
 import re
@@ -186,7 +188,7 @@ class Project:
         return size
 
 
-class ElfFileSummary:
+class ElfFileStats:
     args = None
     dict_all = None
     html_path = None
@@ -322,7 +324,7 @@ class ElfFileSummary:
 
 def init_args_parser():
     # create the parser
-    parser = AnotherArgumentParser(description="======  ELF file summary  ======")
+    parser = AnotherArgumentParser(description="======  ELF file stats  ======")
     parser.add_argument("-p", "--project", metavar="filename", required=True,
                         help="a json file describes the project configuration.")
     parser.add_argument("-t", "--output-trac", action="store_true", default=False,
@@ -339,7 +341,7 @@ def main():
     global args_parser
     args_parser = init_args_parser()
     args = args_parser.parse_args()
-    efs = ElfFileSummary()
+    efs = ElfFileStats()
     efs.run(args)
 
 
