@@ -239,34 +239,40 @@ class ElfFileStats:
     @staticmethod
     def trac_table_item(*args, **kwargs):
         bold = kwargs["bold"] if "bold" in kwargs else False
-        line = "||".join(map(lambda x: " **" + x + "** " if bold else x, args))
-        line = "||%s||" % line
+        redmine = kwargs["redmine"] if "redmine" in kwargs else False
+        markuptd = "||" if not redmine else "|"
+        markupbold = "**" if not redmine else "*"
+        line = markuptd.join(map(lambda x: " " + markupbold + x + markupbold + " " if bold else x, args))
+        line = "%s%s%s" % (markuptd, line, markuptd)
         return line
 
-    def generate_trac_report(self):
+    def generate_trac_report(self, redmine=False):
         self.generate_report_path()
-        reporttrac = self.report_path + '/' + self.dict_all["project"]["name"] + '.trac'
+        reporttrac = self.report_path + '/' + self.dict_all["project"]["name"]
+        reporttrac += '.trac' if not redmine else ".redmine"
+        markuph1 = "== " if not redmine else "h1. "
+        markuph3 = "=== " if not redmine else "h3. "
         with open(reporttrac, 'w') as f:
             f.writelines([
-                "== A_Cam Utility & IPCam middleware (DCS962L as an example): ==", "\n",
-                "== Resource Allocation: Code Size / Image Size / Memory Usage ==", "\n",
+                markuph1, "Resource Allocation:", "\n", "\n",
+                markuph3, "Code Size / Image Size / Memory Usage", "\n", "\n",
                 ""
             ])
             line = self.trac_table_item(
                 "Module / Features",
-                "Code Size",
+                "Code Size ^bytes^",
                 "Image Size",
-                "Memory Usage",
+                "Memory Usage ^bytes^",
                 "Feature Spec Flexibility",
                 "Note",
-                bold=True)
+                bold=True, redmine=redmine)
             f.writelines([line, "\n"])
             for app in self.dict_all["project"]["apps"]:
                 summary = app["summary"] if "summary" in app else {}
                 sections = summary["sections"] if "sections" in summary else {}
                 name = app["name"]
-                comment = summary["comment"] if "comment" in summary else ""
-                note = summary["note"] if "note" in summary else ""
+                comment = summary["comment"] if "comment" in summary else " "
+                note = summary["note"] if "note" in summary else " "
                 code_size = " %s" % "{:,}".format(summary["code_size"]) if "code_size" in summary else "-"
                 image_size = " %s" % "{:,}".format(summary["image_size"]) if "image_size" in summary else "-"
                 if all(k in sections for k in ("bss", "data", "rodata", "text")):
@@ -274,7 +280,7 @@ class ElfFileStats:
                     memory_usage = " %s" % "{:,}".format(memory_usage)
                 else:
                     memory_usage = " %d" % 0
-                line = self.trac_table_item(name, code_size, image_size, memory_usage, comment, note)
+                line = self.trac_table_item(name, code_size, image_size, memory_usage, comment, note, redmine=redmine)
                 f.writelines([line, "\n"])
 
             f.writelines([
@@ -289,6 +295,7 @@ class ElfFileStats:
         genhtml = args.output_html
         genjs = args.output_js
         gentrac = args.output_trac
+        genredmine = args.output_redmine
         dictall = self.dict_all = parse_json(jsonfile)
         if not dictall:
             print('cannot load the json file: %s' % jsonfile)
@@ -309,6 +316,8 @@ class ElfFileStats:
             self.generate_html_report()
         if gentrac:
             self.generate_trac_report()
+        if genredmine:
+            self.generate_trac_report(redmine=True)
 
         return
 
@@ -329,6 +338,8 @@ def init_args_parser():
                         help="a json file describes the project configuration.")
     parser.add_argument("-t", "--output-trac", action="store_true", default=False,
                         help="generate the report in trac format.")
+    parser.add_argument("-r", "--output-redmine", action="store_true", default=False,
+                        help="generate the report in redmine format.")
     parser.add_argument("-j", "--output-js", action="store_true", default=False,
                         help="generate the report in a javascript file.")
     parser.add_argument("-a", "--output-html", action="store_true", default=False,
