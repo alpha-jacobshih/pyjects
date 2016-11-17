@@ -36,13 +36,14 @@ import xml.dom.minidom
 from xml.parsers.expat import ExpatError
 from urllib.request import http
 
-URL_PREFIX = "/alpha"
+URL_PREFIX = "/doorbell"
 URL_CONFIG = URL_PREFIX + "/config"
 URL_TEST = URL_PREFIX + "/test"
 URL_CONFIG_PEER = URL_CONFIG + "/peer"
 URL_TEST_EVENT = URL_TEST + "/event"
 XML_ROOT = "doorbell"
 MAXDATALEN = 512
+HTTP_CONNECTION_TIMEOUT = 5
 
 
 def d2x(d, root="root", pretty=False):
@@ -55,8 +56,8 @@ def d2x(d, root="root", pretty=False):
     """
     # FIXME:
     # insert proper indent for pretty formatting.
-    op = lambda tag: ('<%s>' % tag)
-    cl = lambda tag: '</%s>' % tag + ("\n" if pretty else "")
+    op = lambda tag: ("<%s>" % tag)
+    cl = lambda tag: "</%s>" % tag + ("\n" if pretty else "")
     ml = lambda v, xs: xs + op(key) + str(v) + cl(key)
 
     xstring = op(root) if root else ""
@@ -87,7 +88,7 @@ def http_req(host, url, method="GET", data=None, **kwargs):
     :return: http reponse. an instance of http.client.HTTPResponse.
     """
     method = method.upper()
-    conn = http.client.HTTPConnection(host, timeout=10)
+    conn = http.client.HTTPConnection(host, timeout=HTTP_CONNECTION_TIMEOUT)
     datadict = kwargs
     if type(data) is dict: datadict = {**datadict, **data}
     body = None
@@ -96,8 +97,14 @@ def http_req(host, url, method="GET", data=None, **kwargs):
     else:
         url += "?" + urllib.parse.urlencode(datadict)
 
-    conn.request(method, url, body=body)
-    return conn.getresponse()
+    ret = None
+    try:
+        conn.request(method, url, body=body)
+        ret = conn.getresponse()
+    except (http.client.HTTPException, socket.error, socket.timeout) as e:
+        print(e)
+    finally:
+        return ret
 
 
 def do_recv(peer_ipaddr, port_number):
@@ -115,7 +122,7 @@ def do_recv(peer_ipaddr, port_number):
                 for i in range(0, len(data), 16):
                     str_hex = " ".join("{:02X}".format(c) for c in buf[:16])
                     str_asc = "".join(
-                        chr(c) if chr(c) in string.printable and chr(c) not in string.whitespace else '.' for c in
+                        chr(c) if chr(c) in string.printable and chr(c) not in string.whitespace else "." for c in
                         buf[:16])
                     print("%s" % "{:08x}: {:48s} | {}".format(offset + i, str_hex, str_asc))
                     buf = buf[16:]
@@ -134,7 +141,7 @@ def do_recv(peer_ipaddr, port_number):
 
 
 def config_peer(deviceip, localip, port):
-    http_req(deviceip, URL_CONFIG_PEER, ipaddr=localip, port=port)
+    http_req(deviceip, URL_CONFIG_PEER, "POST", peer={"ipaddr":localip, "port":port})
 
 
 class DoorbellToolbox:
@@ -151,7 +158,7 @@ class DoorbellToolbox:
     def test(self):
         args = self.args
         if args.event:
-            http_req(args.deviceip, URL_TEST_EVENT, id=args.id)
+            http_req(args.deviceip, URL_TEST_EVENT, "POST", test={"event":{"id":args.id}})
 
     def rest(self):
         args = self.args
@@ -159,9 +166,10 @@ class DoorbellToolbox:
         url = args.url
         method = args.method
         data = None if args.data is None else json.loads(args.data.replace("'", '"'))
-        resp = http_req(host, url, method, data, something="what's happened")
-        print("%s: %s %s %s" %(method, host, url, data))
-        print("HTTP %d\n%s" %(resp.status, resp.read().decode("utf8")))
+        resp = http_req(host, url, method, data)
+        if resp is not None:
+            print("%s: %s %s %s" %(method, host, url, data))
+            print("HTTP %d\n%s" %(resp.status, resp.read().decode("utf8")))
 
     def run(self, args):
         self.args = args
@@ -182,14 +190,14 @@ class AnotherArgumentParser(argparse.ArgumentParser):
     """
 
     def error(self, message):
-        sys.stderr.write('\n[ERROR] %s\n\n' % message)
+        sys.stderr.write("\n[ERROR] %s\n\n" % message)
         self.print_help()
         sys.exit(2)
 
 
 def init_args_parser():
     parser = AnotherArgumentParser(description="======  doorbell toolbox  ======")
-    subparsers = parser.add_subparsers(title="action", help='the actions of the doorbell toolbox')
+    subparsers = parser.add_subparsers(title="action", help="the actions of the doorbell toolbox")
 
     # create the parser for the "recv" command
     parser_recv = subparsers.add_parser("recv", help="receive notifications sent from doorbell.")
