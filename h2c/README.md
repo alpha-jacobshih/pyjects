@@ -1,7 +1,7 @@
 # h2c
-header file to c file generator.
-[h2c.py](#): generates c source files from the header files.
-to execute h2c.py, you should have python 3.5 installed in either linux or windows.
+header file to c file generator.  
+[h2c.py](#): generates c source files from the header files.  
+to execute h2c.py, you should have python 3.5 installed in either linux or windows.  
 
 ---
 ## generates c source files from the header files.
@@ -23,6 +23,7 @@ example:
 ```
 ./h2c.py --input ./temp/h/ --output ./temp/src/
 ```
-it traverses into the folder ./temp/h to read the header file and generates the c code to folder ./temp/src.
+it traverses into the folder ./temp/h to read the header file and generates the c code to folder ./temp/src.  
+
 
 
