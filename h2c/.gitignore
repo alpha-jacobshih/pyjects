@@ -1,0 +1,7 @@
+# pycharm files
+.idea
+
+# skipped folder
+temp
+test
+
