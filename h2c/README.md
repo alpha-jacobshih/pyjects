@@ -17,6 +17,8 @@ optional arguments:
                         folder of the header files.
   -o OUTPUT, --output OUTPUT
                         output folder.
+  -c, --common-header   generate a header file (h2c.h) that includes all
+                        headers for source code to include.
 ```
 
 example:

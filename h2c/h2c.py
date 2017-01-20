@@ -93,11 +93,16 @@ class H2C:
         c_filename = "%s.c" % match.group(1) if match else None
         return c_filename
 
+    def generate_include_header(self):
+        lines = []
+        for file in self.files:
+            lines.append('#include "%s"\n' % file["name"])
+        return lines
+
     def generate_h2c_header(self, h2c_header):
         with open(h2c_header, "w") as f:
-            for file in self.files:
-                line = '#include "%s"\n' % file["name"]
-                f.write(line)
+            lines = self.generate_include_header()
+            f.write("".join(lines))
 
     def get_function_body(self, funcdecl):
         body = ""
@@ -114,21 +119,23 @@ class H2C:
                     filepath = os.path.join(curdir, filename)
                     buffer = self.read_header_file(filepath)
                     file = {
-                        "name": filename,   # file name (foo.h)
-                        "path": filepath,   # file path (/path/to/foo.h)
-                        "buffer": buffer,   # original content of header file
-                        "header": None,     # header without comments
-                        "body": None        # c code
+                        "name": filename,  # file name (foo.h)
+                        "path": filepath,  # file path (/path/to/foo.h)
+                        "buffer": buffer,  # original content of header file
+                        "header": None,  # header without comments
+                        "body": None  # c code
                     }
                     file["header"] = self.remove_comment(file["buffer"])
                     self.files.append(file)
 
     def generate_dummy_code(self):
         output = self.args.output
+        h2c = self.args.common_header
         if not os.path.exists(output):
             os.makedirs(output)
         h2c_header = os.path.join(output, H2C_HEADER)
-        self.generate_h2c_header(h2c_header)
+        if h2c:
+            self.generate_h2c_header(h2c_header)
 
         for i, file in enumerate(self.files):
             declarations = self.get_function_declarations(file["header"])
@@ -142,8 +149,13 @@ class H2C:
                 if c_filename:
                     c_filepath = os.path.join(output, c_filename)
                     with open(c_filepath, "w") as f:
-                        include_h2c_header = '#include "%s"\n' % H2C_HEADER
-                        f.write(include_h2c_header)
+                        lines = []
+                        if h2c:
+                            lines.append('#include "%s"\n' % H2C_HEADER)
+                        else:
+                            lines = self.generate_include_header()
+
+                        f.write("".join(lines))
                         f.write("\n")
                         f.write(file["body"])
 
@@ -180,6 +192,8 @@ def init_args_parser():
                         help="folder of the header files.")
     parser.add_argument("-o", "--output", required=True,
                         help="output folder.")
+    parser.add_argument("-c", "--common-header", action="store_true",
+                        help="generate a header file (h2c.h) that includes all headers for source code to include.")
     parser.set_defaults(action="process")
     return parser
 
