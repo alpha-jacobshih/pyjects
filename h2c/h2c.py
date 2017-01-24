@@ -12,7 +12,11 @@ import re
 H2C_HEADER = "h2c.h"
 C_CODE_TEMPLATE = """
 %s {
-    return (%s) 0;
+    %s ret = (%s) 0;
+    /*
+     * FIXME: implement the function here.
+     */
+    return ret;
 }
 """
 
@@ -109,7 +113,7 @@ class H2C:
         func = self.get_function_prototype(funcdecl)
         if func:
             # generate the dummy code by return 0 cast with return type.
-            body = C_CODE_TEMPLATE % (func["prototype"], func["return_type"])
+            body = C_CODE_TEMPLATE % (func["prototype"], func["return_type"], func["return_type"])
         return body
 
     def read_header_files(self, folder):
