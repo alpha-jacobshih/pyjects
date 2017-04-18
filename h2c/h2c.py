@@ -66,7 +66,7 @@ class H2C:
     @staticmethod
     def get_function_declarations(header):
         # find function declarations
-        pattern = re.compile(r"\s*[\w\s\*]+\([\w\s\*,]*\)\s*;", re.MULTILINE)
+        pattern = re.compile(r"\s*[\w\s\*]+\([\w\s\*,\.]*\)\s*;", re.MULTILINE)
         declarations = pattern.findall(header)
         for i in range(0, len(declarations)):
             # trim the leading and trailing spaces
@@ -79,7 +79,7 @@ class H2C:
     def get_function_prototype(funcdecl):
         # function prototype contains return type and function name.
         # split the return type and function name into group.
-        pattern = re.compile(r"(\w+\s*\**) *(\w+\([\w\s\*,]*\))", re.MULTILINE)
+        pattern = re.compile(r"(\w+\s*\**) *(\w+\([\w\s\*,\.]*\))", re.MULTILINE)
         match = pattern.match(funcdecl)
         if match:
             prototype = match.group(0).strip()
